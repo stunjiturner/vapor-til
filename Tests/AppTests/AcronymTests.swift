@@ -198,6 +198,14 @@ final class AcronymTests: XCTestCase {
     XCTAssertEqual(newCategories.count, 1)
   }
 
+    func testPerformance() {
+        self.measure {
+            for _ in 0...1000 {
+                _ = try! app.sendRequest(to: "/", method: .GET)
+            }
+        }
+    }
+
   static let allTests = [
     ("testAcronymsCanBeRetrievedFromAPI", testAcronymsCanBeRetrievedFromAPI),
     ("testAcronymCanBeSavedWithAPI", testAcronymCanBeSavedWithAPI),

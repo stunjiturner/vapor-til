@@ -27,7 +27,7 @@
 /// THE SOFTWARE.
 
 import Vapor
-import Leaf
+import HTMLKit
 import Authentication
 import SendGrid
 
@@ -64,62 +64,59 @@ struct WebsiteController: RouteCollection {
     protectedRoutes.post("users", User.parameter, "addProfilePicture", use: addProfilePicturePostHandler)
   }
 
-  func indexHandler(_ req: Request) throws -> Future<View> {
-    return Acronym.query(on: req).all().flatMap(to: View.self) { acronyms in
-      let userLoggedIn = try req.isAuthenticated(User.self)
-      let showCookieMessage = req.http.cookies["cookies-accepted"] == nil
-      let context = IndexContext(title: "Home page", acronyms: acronyms, userLoggedIn: userLoggedIn,
-                                 showCookieMessage: showCookieMessage)
-      return try req.view().render("index", context)
+  func indexHandler(_ req: Request) throws -> Future<HTTPResponse> {
+    return Acronym.query(on: req).all().map(to: HTTPResponse.self) { acronyms in
+        return try PageController.shared.render(IndexView.self, with: .init(req: req, acronyms: acronyms))
     }
   }
 
-  func acronymHandler(_ req: Request) throws -> Future<View> {
-    return try req.parameters.next(Acronym.self).flatMap(to: View.self) { acronym in
-      return acronym.user.get(on: req).flatMap(to: View.self) { user in
-        let categories = try acronym.categories.query(on: req).all()
-        let context = AcronymContext(title: acronym.short, acronym: acronym, user: user, categories: categories)
-        return try req.view().render("acronym", context)
+  func acronymHandler(_ req: Request) throws -> Future<HTTPResponse> {
+    return try req.parameters.next(Acronym.self).flatMap(to: HTTPResponse.self) { acronym in
+      return acronym.user.get(on: req).flatMap(to: HTTPResponse.self) { user in
+        return try acronym.categories.query(on: req).all().map(to: HTTPResponse.self) { (categories) in
+            let context = try AcronymView.Context(req: req, user: user, acronym: acronym, categories: categories)
+            return try PageController.shared.render(AcronymView.self, with: context)
+        }
       }
     }
   }
 
-  func userHandler(_ req: Request) throws -> Future<View> {
-    return try req.parameters.next(User.self).flatMap(to: View.self) { user in
-      return try user.acronyms.query(on: req).all().flatMap(to: View.self) { acronyms in
-        let loggedInUser = try req.authenticated(User.self)
-        let context = UserContext(title: user.name, user: user, acronyms: acronyms, authenticatedUser: loggedInUser)
-        return try req.view().render("user", context)
+  func userHandler(_ req: Request) throws -> Future<HTTPResponse> {
+    return try req.parameters.next(User.self).flatMap(to: HTTPResponse.self) { user in
+      return try user.acronyms.query(on: req).all().map(to: HTTPResponse.self) { acronyms in
+        return try PageController.shared.render(UserView.self,
+                                                with: .init(user: user, acronyms: acronyms, req: req))
       }
     }
   }
 
-  func allUsersHandler(_ req: Request) throws -> Future<View> {
-    return User.query(on: req).all().flatMap(to: View.self) { users in
-      let context = AllUsersContext(title: "All Users", users: users)
-      return try req.view().render("allUsers", context)
+  func allUsersHandler(_ req: Request) throws -> Future<HTTPResponse> {
+    return User.query(on: req).all().map(to: HTTPResponse.self) { users in
+        return try PageController.shared.render(AllUsers.self,
+                                                with: .init(users: users, req: req))
     }
   }
 
-  func allCategoriesHandler(_ req: Request) throws -> Future<View> {
-    let categories = Category.query(on: req).all()
-    let context = AllCategoriesContext(categories: categories)
-    return try req.view().render("allCategories", context)
-  }
-
-  func categoryHandler(_ req: Request) throws -> Future<View> {
-    return try req.parameters.next(Category.self).flatMap(to: View.self) { category in
-      let acronyms = try category.acronyms.query(on: req).all()
-      let context = CategoryContext(title: category.name, category: category, acronyms: acronyms)
-      return try req.view().render("category", context)
+  func allCategoriesHandler(_ req: Request) throws -> Future<HTTPResponse> {
+    return Category.query(on: req).all().map { categories in
+        return try PageController.shared.render(AllCategoriesView.self,
+                                                with: .init(categories: categories, req: req))
     }
   }
 
-  func createAcronymHandler(_ req: Request) throws -> Future<View> {
+  func categoryHandler(_ req: Request) throws -> Future<HTTPResponse> {
+    return try req.parameters.next(Category.self).flatMap(to: HTTPResponse.self) { category in
+        try category.acronyms.query(on: req).all().map { acronyms in
+            return try PageController.shared.render(CategoryView.self,
+                                                    with: .init(category: category, acronyms: acronyms, req: req))
+        }
+    }
+  }
+
+  func createAcronymHandler(_ req: Request) throws -> HTTPResponse {
     let token = try CryptoRandom().generateData(count: 16).base64EncodedString()
-    let context = CreateAcronymContext(csrfToken: token)
     try req.session()["CSRF_TOKEN"] = token
-    return try req.view().render("createAcronym", context)
+    return try PageController.shared.render(CreateAcronymView.self, with: .init(req: req))
   }
 
   func createAcronymPostHandler(_ req: Request, data: CreateAcronymData) throws -> Future<Response> {
@@ -144,11 +141,12 @@ struct WebsiteController: RouteCollection {
     }
   }
 
-  func editAcronymHandler(_ req: Request) throws -> Future<View> {
-    return try req.parameters.next(Acronym.self).flatMap(to: View.self) { acronym in
-      let categories = try acronym.categories.query(on: req).all()
-      let context = EditAcronymContext(acronym: acronym, categories: categories)
-      return try req.view().render("createAcronym", context)
+  func editAcronymHandler(_ req: Request) throws -> Future<HTTPResponse> {
+    return try req.parameters.next(Acronym.self).flatMap(to: HTTPResponse.self) { acronym in
+        try acronym.categories.query(on: req).all().map { categories in
+            return try PageController.shared.render(CreateAcronymView.self,
+                                                    with: .init(req: req, isEditing: true, categories: categories))
+        }
     }
   }
 
@@ -197,14 +195,10 @@ struct WebsiteController: RouteCollection {
     return try req.parameters.next(Acronym.self).delete(on: req).transform(to: req.redirect(to: "/"))
   }
 
-  func loginHandler(_ req: Request) throws -> Future<View> {
-    let context: LoginContext
-    if req.query[Bool.self, at: "error"] != nil {
-      context = LoginContext(loginError: true)
-    } else {
-      context = LoginContext()
-    }
-    return try req.view().render("login", context)
+  func loginHandler(_ req: Request) throws -> HTTPResponse {
+    return try PageController.shared.render(LoginView.self,
+                                            with: .init(req: req,
+                                                        hasError: req.query[Bool.self, at: "error"] != nil))
   }
 
   func loginPostHandler(_ req: Request, userData: LoginPostData) throws -> Future<Response> {
@@ -223,14 +217,10 @@ struct WebsiteController: RouteCollection {
     return req.redirect(to: "/")
   }
 
-  func registerHandler(_ req: Request) throws -> Future<View> {
-    let context: RegisterContext
-    if let message = req.query[String.self, at: "message"] {
-      context = RegisterContext(message: message)
-    } else {
-      context = RegisterContext()
-    }
-    return try req.view().render("register", context)
+  func registerHandler(_ req: Request) throws -> HTTPResponse {
+    return try PageController.shared.render(RegisterView.self,
+                                            with: RegisterView.Context.init(req: req,
+                                                                            message: req.query[String.self, at: "message"]))
   }
 
   func registerPostHandler(_ req: Request, data: RegisterData) throws -> Future<Response> {
@@ -259,16 +249,18 @@ struct WebsiteController: RouteCollection {
     return try req.view().render("forgottenPassword", ["title": "Reset Your Password"])
   }
 
-  func forgottenPasswordPostHandler(_ req: Request) throws -> Future<View> {
+  func forgottenPasswordPostHandler(_ req: Request) throws -> Future<HTTPResponse> {
     let email = try req.content.syncGet(String.self, at: "email")
-    return User.query(on: req).filter(\.email == email).first().flatMap(to: View.self) { user in
+    return User.query(on: req).filter(\.email == email).first().flatMap(to: HTTPResponse.self) { user in
       guard let user = user else {
-        return try req.view().render("forgottenPasswordConfirmed", ["title": "Password Reset Email Sent"])
+        return req.future().map {
+            return try PageController.shared.render(ForgottenPasswordView.self, with: .init(req: req))
+        }
       }
 
       let resetTokenString = try CryptoRandom().generateData(count: 32).base32EncodedString()
       let resetToken = try ResetPasswordToken(token: resetTokenString, userID: user.requireID())
-      return resetToken.save(on: req).flatMap(to: View.self) { _ in
+      return resetToken.save(on: req).flatMap(to: HTTPResponse.self) { _ in
         let emailContent = """
         <p>You've requested to reset your password. <a href=\"http://localhost:8080/resetPassword?token=\(resetTokenString)\">Click here</a> to reset your password.</p>
         """
@@ -278,16 +270,19 @@ struct WebsiteController: RouteCollection {
         let email = SendGridEmail(personalizations: [emailConfig], from: fromEmail, content: [["type": "text/html",
                                                                                                "value": emailContent]])
         let sendGridClient = try req.make(SendGridClient.self)
-        return try sendGridClient.send([email], on: req.eventLoop).flatMap(to: View.self) { _ in
-          return try req.view().render("forgottenPasswordConfirmed", ["title": "Password Reset Email Sent"])
+        return try sendGridClient.send([email], on: req.eventLoop).map(to: HTTPResponse.self) { _ in
+          return try PageController.shared.render(ForgottenPasswordView.self, with: .init(req: req))
         }
       }
     }
   }
 
-  func resetPasswordHandler(_ req: Request) throws -> Future<View> {
+  func resetPasswordHandler(_ req: Request) throws -> Future<HTTPResponse> {
     guard let token = req.query[String.self, at: "token"] else {
-      return try req.view().render("resetPassword", ResetPasswordContext(error: true))
+        return req.future().map {
+            try PageController.shared.render(ResetPasswordView.self,
+                                             with: .init(req: req, isError: true))
+        }
     }
     return ResetPasswordToken.query(on: req).filter(\.token == token).first().map(to: ResetPasswordToken.self) { token in
       guard let token = token else {
@@ -299,14 +294,16 @@ struct WebsiteController: RouteCollection {
         try req.session().set("ResetPasswordUser", to: user)
         return token.delete(on: req)
       }
-    }.flatMap {
-      try req.view().render("resetPassword", ResetPasswordContext())
+    }.map {
+        try PageController.shared.render(ResetPasswordView.self,
+                                         with: .init(req: req))
     }
   }
 
   func resetPasswordPostHandler(_ req: Request, data: ResetPasswordData) throws -> Future<Response> {
     guard data.password == data.confirmPassword else {
-      return try req.view().render("resetPassword", ResetPasswordContext(error: true)).encode(for: req)
+        return try PageController.shared.render(ResetPasswordView.self,
+                                                with: .init(req: req, isError: true)).encode(for: req)
     }
     let resetPasswordUser = try req.session().get("ResetPasswordUser", as: User.self)
     try req.session()["ResetPasswordUser"] = nil
@@ -315,9 +312,11 @@ struct WebsiteController: RouteCollection {
     return resetPasswordUser.save(on: req).transform(to: req.redirect(to: "/login"))
   }
 
-  func addProfilePictureHandler(_ req: Request) throws -> Future<View> {
-    return try req.parameters.next(User.self).flatMap { user in
-      try req.view().render("addProfilePicture", ["title": "Add Profile Picture", "username": user.name])
+  func addProfilePictureHandler(_ req: Request) throws -> Future<HTTPResponse> {
+    return try req.parameters.next(User.self).map { user in
+        try PageController.shared.render(AddProfilePictureView.self,
+                                         with: .init(username: user.name, req: req))
+
     }
   }
 

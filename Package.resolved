@@ -74,6 +74,15 @@
         }
       },
       {
+        "package": "HTMLKit",
+        "repositoryURL": "https://github.com/vapor-community/HTMLKit",
+        "state": {
+          "branch": "master",
+          "revision": "ed7d26a30836893f9849b68c399bf2c7700787f5",
+          "version": null
+        }
+      },
+      {
         "package": "HTTP",
         "repositoryURL": "https://github.com/vapor/http.git",
         "state": {
@@ -101,15 +110,6 @@
         }
       },
       {
-        "package": "Leaf",
-        "repositoryURL": "https://github.com/vapor/leaf.git",
-        "state": {
-          "branch": null,
-          "revision": "d35f54cbac723e673f9bd5078361eea74049c8d7",
-          "version": "3.0.2"
-        }
-      },
-      {
         "package": "Multipart",
         "repositoryURL": "https://github.com/vapor/multipart.git",
         "state": {
@@ -123,8 +123,8 @@
         "repositoryURL": "https://github.com/vapor/postgresql.git",
         "state": {
           "branch": null,
-          "revision": "cbe5505f6f15c69f569ec939cf7e7cc8be61857c",
-          "version": "1.2.1"
+          "revision": "d34cf720a43ea2ef8dbf2ba7d9f18d39bb1eb795",
+          "version": "1.2.2"
         }
       },
       {
@@ -132,8 +132,8 @@
         "repositoryURL": "https://github.com/vapor/routing.git",
         "state": {
           "branch": null,
-          "revision": "3219e328491b0853b8554c5a694add344d2c6cfb",
-          "version": "3.0.1"
+          "revision": "626190ddd2bd9f967743b60ba6adaf90bbd2651c",
+          "version": "3.0.2"
         }
       },
       {
