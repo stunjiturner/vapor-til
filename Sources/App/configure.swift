@@ -61,7 +61,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
   } else {
     let hostname = Environment.get("DATABASE_HOSTNAME") ?? "localhost"
     let username = Environment.get("DATABASE_USER") ?? "vapor"
-    let password = Environment.get("DATABASE_PASSWORD") ?? "password"
+    let password = Environment.get("DATABASE_PASSWORD")
     let databaseName: String
     let databasePort: Int
     if (env == .testing) {

@@ -65,6 +65,12 @@ extension HTML.AttributeNode {
     public static func ariaControls(_ value: CompiledTemplate) -> HTML.AttributeNode {
         return HTML.AttributeNode(attribute: "aria-controls", value: value)
     }
+
+    /// - Parameter value: The value of the attribute
+    /// - Returns: An attribute node
+    public static var active: HTML.AttributeNode {
+        return HTML.AttributeNode(attribute: "active", value: nil)
+    }
 }
 
 extension AttributableNode {
@@ -97,6 +103,12 @@ extension AttributableNode {
     public func ariaControls(_ value: CompiledTemplate) -> Self {
         return add(.ariaControls(value))
     }
+
+    /// - Parameter value: The value of the attribute
+    /// - Returns: An attribute node
+    public var active: Self {
+        return add( .active)
+    }
 }
 
 
@@ -128,7 +140,7 @@ struct BaseView: ContextualTemplate {
                     renderIf(
                         \.title == "Create An Acronym" || \.title == "Edit Acronym",
 
-                        link.rel("stylesheet").href("https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css").integrity("sha384-RdQbeSCGSeSdSlTMGnUr2oDJZzOuGjJAkQy1MbKMu8fZT5G0qlBajY0n0sY/hKMK").crossorigin("anonymous").type("text/css") // FIXME: Should use if here
+                        link.rel("stylesheet").href("https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css").integrity("sha384-RdQbeSCGSeSdSlTMGnUr2oDJZzOuGjJAkQy1MbKMu8fZT5G0qlBajY0n0sY/hKMK").crossorigin("anonymous").type("text/css")
                     ),
 
                     link.rel("stylesheet").href("/styles/style.css").type("text/css"),
@@ -145,32 +157,38 @@ struct BaseView: ContextualTemplate {
                             ),
                             div.class("collapse navbar-collapse").id("navbarSupportedContent").child(
                                 ul.class("navbar-nav mr-auto").child(
-                                    li.class("nav-item").child(
-                                        a.href("/").class("nav-link").child(
-                                            "Home"
-                                        )
+
+                                    dynamic(li.class("nav-item"))
+                                        .if(\.title == "Home page", add: .active).child(
+                                            a.href("/").class("nav-link").child(
+                                                "Home"
+                                            )
                                     ),
-                                    li.class("nav-item").child(
-                                        a.href("/users").class("nav-link").child(
-                                            "All Users"
-                                        )
+                                    dynamic(li.class("nav-item"))
+                                        .if(\.title == "All Users", add: .active).child(
+                                            a.href("/users").class("nav-link").child(
+                                                "All Users"
+                                            )
                                     ),
-                                    li.class("nav-item").child(
-                                        a.href("/categories").class("nav-link").child(
-                                            "All Categories"
-                                        )
+                                    dynamic(li.class("nav-item"))
+                                        .if(\.title == "All Categories", add: .active).child(
+                                            a.href("/categories").class("nav-link").child(
+                                                "All Categories"
+                                            )
                                     ),
-                                    li.class("nav-item").child(
-                                        a.href("/acronyms/create").class("nav-link").child(
-                                            "Create An Acronym"
-                                        )
+                                    dynamic(li.class("nav-item"))
+                                        .if(\.title == "Create An Acronym", add: .active).child(
+                                            a.href("/acronyms/create").class("nav-link").child(
+                                                "Create An Acronym"
+                                            )
                                     ),
                                     renderIf(
                                         \.userLoggedIn == false,
-                                        li.class("nav-item").child(
-                                            a.href("/register").class("nav-link").child(
-                                                "Register"
-                                            )
+                                        dynamic(li.class("nav-item"))
+                                            .if(\.title == "Register", add: .active).child(
+                                                a.href("/register").class("nav-link").child(
+                                                    "Register"
+                                                )
                                         )
                                     )
                                 ),
