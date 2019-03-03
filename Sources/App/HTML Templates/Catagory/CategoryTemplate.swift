@@ -1,9 +1,3 @@
-//
-//  CategoryTemplate.swift
-//  App
-//
-//  Created by Mats Mollestad on 03/03/2019.
-//
 
 import HTMLKit
 import Vapor
@@ -13,11 +7,11 @@ struct CategoryTemplate: ContextualTemplate {
     struct Context {
         let category: Category
         let base: BaseTemplate.Context
-        var table: AcronymListTemplate.Context
+        let acronyms: [Acronym]
 
         init(category: Category, acronyms: [Acronym], req: Request) throws {
             self.category = category
-            self.table = .init(acronyms: acronyms)
+            self.acronyms = acronyms
             self.base = try .init(title: category.name, req: req)
         }
     }
@@ -30,7 +24,7 @@ struct CategoryTemplate: ContextualTemplate {
                 ),
                 embed(
                     AcronymListTemplate(),
-                    withPath: \.table
+                    withPath: \.acronyms
                 )
             ),
             withPath: \Context.base)

@@ -1,9 +1,3 @@
-//
-//  IndexTemplate.swift
-//  App
-//
-//  Created by Mats Mollestad on 03/03/2019.
-//
 
 import HTMLKit
 import Vapor
@@ -12,11 +6,11 @@ struct IndexTemplate: ContextualTemplate {
 
     struct Context {
         let base: BaseTemplate.Context
-        let acronyms: AcronymListTemplate.Context
+        let acronyms: [Acronym]
 
         init(req: Request, acronyms: [Acronym]) throws {
             self.base = try .init(title: "Home page", req: req)
-            self.acronyms = .init(acronyms: acronyms)
+            self.acronyms = acronyms
         }
     }
 

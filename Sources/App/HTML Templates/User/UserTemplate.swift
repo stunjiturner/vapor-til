@@ -1,9 +1,3 @@
-//
-//  UserTemplate.swift
-//  App
-//
-//  Created by Mats Mollestad on 03/03/2019.
-//
 
 import HTMLKit
 import Vapor
@@ -14,12 +8,12 @@ struct UserTemplate: ContextualTemplate {
     struct Context {
         let user: User
         let base: BaseTemplate.Context
-        let table: AcronymListTemplate.Context
+        let acronyms: [Acronym]
 
         init(user: User, acronyms: [Acronym], req: Request) throws {
             self.user = user
             self.base = try .init(title: user.name, req: req)
-            self.table = .init(acronyms: acronyms)
+            self.acronyms = acronyms
         }
     }
 
@@ -61,7 +55,7 @@ struct UserTemplate: ContextualTemplate {
                 // List of Acronyms
                 embed(
                     AcronymListTemplate(),
-                    withPath: \.table
+                    withPath: \.acronyms
                 )
             ),
             withPath: \.base)

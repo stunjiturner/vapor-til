@@ -1,9 +1,3 @@
-//
-//  ForgottenPasswordTemplate.swift
-//  App
-//
-//  Created by Mats Mollestad on 03/03/2019.
-//
 
 import HTMLKit
 import Vapor

@@ -1,23 +1,15 @@
-//
-//  AcronymListTemplate.swift
-//  App
-//
-//  Created by Mats Mollestad on 03/03/2019.
-//
 
 import HTMLKit
 import Vapor
 
 struct AcronymListTemplate: ContextualTemplate {
 
-    struct Context {
-        let acronyms: [Acronym]
-    }
+    typealias Context = [Acronym]
 
     func build() -> CompiledTemplate {
         return
             runtimeIf(
-                \.acronyms.count > 0,
+                \.count > 0,
 
                 table.class("table table-bordered table-hover").child(
                     thead.class("thead-light").child(
@@ -29,13 +21,13 @@ struct AcronymListTemplate: ContextualTemplate {
 
                     // All the rows
                     tbody.child(
-                        forEach(in:     \.acronyms,
-                                render: AcronymRow()
+                        forEachInContext(
+                            render: AcronymRow()
                         )
                     )
                 )
             ).else(
-                    "There aren’t any acronyms yet!"
+                "There aren’t any acronyms yet!"
             )
     }
 
