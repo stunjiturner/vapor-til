@@ -66,7 +66,7 @@ struct WebsiteController: RouteCollection {
 
   func indexHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return Acronym.query(on: req).all().map(to: HTTPResponse.self) { acronyms in
-        return try PageController.shared.render(IndexView.self, with: .init(req: req, acronyms: acronyms))
+        return try PageController.shared.render(IndexTemplate.self, with: .init(req: req, acronyms: acronyms))
     }
   }
 
@@ -74,8 +74,8 @@ struct WebsiteController: RouteCollection {
     return try req.parameters.next(Acronym.self).flatMap(to: HTTPResponse.self) { acronym in
       return acronym.user.get(on: req).flatMap(to: HTTPResponse.self) { user in
         return try acronym.categories.query(on: req).all().map(to: HTTPResponse.self) { (categories) in
-            let context = try AcronymView.Context(req: req, user: user, acronym: acronym, categories: categories)
-            return try PageController.shared.render(AcronymView.self, with: context)
+            let context = try AcronymTemplate.Context(req: req, user: user, acronym: acronym, categories: categories)
+            return try PageController.shared.render(AcronymTemplate.self, with: context)
         }
       }
     }
@@ -84,7 +84,7 @@ struct WebsiteController: RouteCollection {
   func userHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return try req.parameters.next(User.self).flatMap(to: HTTPResponse.self) { user in
       return try user.acronyms.query(on: req).all().map(to: HTTPResponse.self) { acronyms in
-        return try PageController.shared.render(UserView.self,
+        return try PageController.shared.render(UserTemplate.self,
                                                 with: .init(user: user, acronyms: acronyms, req: req))
       }
     }
@@ -92,14 +92,14 @@ struct WebsiteController: RouteCollection {
 
   func allUsersHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return User.query(on: req).all().map(to: HTTPResponse.self) { users in
-        return try PageController.shared.render(AllUsers.self,
+        return try PageController.shared.render(AllUsersTemplate.self,
                                                 with: .init(users: users, req: req))
     }
   }
 
   func allCategoriesHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return Category.query(on: req).all().map { categories in
-        return try PageController.shared.render(AllCategoriesView.self,
+        return try PageController.shared.render(AllCategoriesTemplate.self,
                                                 with: .init(categories: categories, req: req))
     }
   }
@@ -107,7 +107,7 @@ struct WebsiteController: RouteCollection {
   func categoryHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return try req.parameters.next(Category.self).flatMap(to: HTTPResponse.self) { category in
         try category.acronyms.query(on: req).all().map { acronyms in
-            return try PageController.shared.render(CategoryView.self,
+            return try PageController.shared.render(CategoryTemplate.self,
                                                     with: .init(category: category, acronyms: acronyms, req: req))
         }
     }
@@ -116,7 +116,7 @@ struct WebsiteController: RouteCollection {
   func createAcronymHandler(_ req: Request) throws -> HTTPResponse {
     let token = try CryptoRandom().generateData(count: 16).base64EncodedString()
     try req.session()["CSRF_TOKEN"] = token
-    return try PageController.shared.render(CreateAcronymView.self, with: .init(req: req))
+    return try PageController.shared.render(CreateAcronymTemplate.self, with: .init(req: req))
   }
 
   func createAcronymPostHandler(_ req: Request, data: CreateAcronymData) throws -> Future<Response> {
@@ -144,7 +144,7 @@ struct WebsiteController: RouteCollection {
   func editAcronymHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return try req.parameters.next(Acronym.self).flatMap(to: HTTPResponse.self) { acronym in
         try acronym.categories.query(on: req).all().map { categories in
-            return try PageController.shared.render(CreateAcronymView.self,
+            return try PageController.shared.render(CreateAcronymTemplate.self,
                                                     with: .init(req: req, isEditing: true, categories: categories))
         }
     }
@@ -196,7 +196,7 @@ struct WebsiteController: RouteCollection {
   }
 
   func loginHandler(_ req: Request) throws -> HTTPResponse {
-    return try PageController.shared.render(LoginView.self,
+    return try PageController.shared.render(LoginTemplate.self,
                                             with: .init(req: req,
                                                         hasError: req.query[Bool.self, at: "error"] != nil))
   }
@@ -218,9 +218,9 @@ struct WebsiteController: RouteCollection {
   }
 
   func registerHandler(_ req: Request) throws -> HTTPResponse {
-    return try PageController.shared.render(RegisterView.self,
-                                            with: RegisterView.Context.init(req: req,
-                                                                            message: req.query[String.self, at: "message"]))
+    return try PageController.shared.render(RegisterTemplate.self,
+                                            with: .init(req: req,
+                                                        message: req.query[String.self, at: "message"]))
   }
 
   func registerPostHandler(_ req: Request, data: RegisterData) throws -> Future<Response> {
@@ -254,7 +254,7 @@ struct WebsiteController: RouteCollection {
     return User.query(on: req).filter(\.email == email).first().flatMap(to: HTTPResponse.self) { user in
       guard let user = user else {
         return req.future().map {
-            return try PageController.shared.render(ForgottenPasswordView.self, with: .init(req: req))
+            return try PageController.shared.render(ForgottenPasswordTemplate.self, with: .init(req: req))
         }
       }
 
@@ -271,7 +271,7 @@ struct WebsiteController: RouteCollection {
                                                                                                "value": emailContent]])
         let sendGridClient = try req.make(SendGridClient.self)
         return try sendGridClient.send([email], on: req.eventLoop).map(to: HTTPResponse.self) { _ in
-          return try PageController.shared.render(ForgottenPasswordView.self, with: .init(req: req))
+          return try PageController.shared.render(ForgottenPasswordTemplate.self, with: .init(req: req))
         }
       }
     }
@@ -280,7 +280,7 @@ struct WebsiteController: RouteCollection {
   func resetPasswordHandler(_ req: Request) throws -> Future<HTTPResponse> {
     guard let token = req.query[String.self, at: "token"] else {
         return req.future().map {
-            try PageController.shared.render(ResetPasswordView.self,
+            try PageController.shared.render(ResetPasswordTemplate.self,
                                              with: .init(req: req, isError: true))
         }
     }
@@ -295,14 +295,14 @@ struct WebsiteController: RouteCollection {
         return token.delete(on: req)
       }
     }.map {
-        try PageController.shared.render(ResetPasswordView.self,
+        try PageController.shared.render(ResetPasswordTemplate.self,
                                          with: .init(req: req))
     }
   }
 
   func resetPasswordPostHandler(_ req: Request, data: ResetPasswordData) throws -> Future<Response> {
     guard data.password == data.confirmPassword else {
-        return try PageController.shared.render(ResetPasswordView.self,
+        return try PageController.shared.render(ResetPasswordTemplate.self,
                                                 with: .init(req: req, isError: true)).encode(for: req)
     }
     let resetPasswordUser = try req.session().get("ResetPasswordUser", as: User.self)
@@ -314,7 +314,7 @@ struct WebsiteController: RouteCollection {
 
   func addProfilePictureHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return try req.parameters.next(User.self).map { user in
-        try PageController.shared.render(AddProfilePictureView.self,
+        try PageController.shared.render(AddProfilePictureTemplate.self,
                                          with: .init(username: user.name, req: req))
 
     }
