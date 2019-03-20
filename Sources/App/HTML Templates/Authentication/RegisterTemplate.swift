@@ -31,7 +31,7 @@ struct RegisterTemplate: ContextualTemplate {
                         variable(\.message)
                     )
                 ),
-                form.method("post").child(
+                form.method(.post).child(
 
                     // Name input
                     div.class("form-group").child(

@@ -31,7 +31,7 @@ struct ResetPasswordTemplate: ContextualTemplate {
                     )
                 ),
 
-                form.method("post").child(
+                form.method(.post).child(
 
                     // Password input
                     div.class("form-group").child(

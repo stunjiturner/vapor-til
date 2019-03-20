@@ -24,7 +24,7 @@ struct AddProfilePictureTemplate: ContextualTemplate {
                 ),
 
                 // The picture form
-                form.method("post").enctype("multipart/form-data").child(
+                form.method(.post).enctype("multipart/form-data").child(
                     div.class("form-group").child(
                         label.for("picture").child(
                             "Select Picture for ", variable(\.username)

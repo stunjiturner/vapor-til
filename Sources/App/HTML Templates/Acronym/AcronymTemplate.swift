@@ -46,7 +46,7 @@ struct AcronymTemplate: ContextualTemplate {
                 ),
 
                 // Delete and edit Acronym
-                form.method("post").action("/acronyms/", variable(\.acronym.id), "/delete").child(
+                form.method(.post).action("/acronyms/", variable(\.acronym.id), "/delete").child(
                     a.class("btn btn-primary").href("/acronyms/", variable(\.acronym.id) ,"/edit").role("button").child(
                         "Edit"
                     ),

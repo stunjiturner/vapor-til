@@ -21,7 +21,7 @@ struct AcronymListTemplate: ContextualTemplate {
 
                     // All the rows
                     tbody.child(
-                        forEachInContext(
+                        forEach(
                             render: AcronymRow()
                         )
                     )

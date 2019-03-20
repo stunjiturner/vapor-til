@@ -22,10 +22,6 @@ class PageController {
         try renderer.add(template: ResetPasswordTemplate())
         try renderer.add(template: UserTemplate())
     }
-
-    func render<T>(_ template: T.Type, with context: T.Context) throws -> HTTPResponse where T : ContextualTemplate {
-        return try HTTPResponse(body: renderer.render(T.self, with: context))
-    }
 }
 
 // Some extensions for non standard HTML attributes

@@ -19,7 +19,7 @@ struct ForgottenPasswordTemplate: ContextualTemplate {
                 h1.child(
                     variable(\.base.title)
                 ),
-                form.method("post").child(
+                form.method(.post).child(
 
                     // Email input
                     div.class("form-group").child(

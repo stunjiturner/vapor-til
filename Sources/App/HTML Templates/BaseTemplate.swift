@@ -65,25 +65,25 @@ struct BaseTemplate: ContextualTemplate {
                             div.class("collapse navbar-collapse").id("navbarSupportedContent").child(
                                 ul.class("navbar-nav mr-auto").child(
 
-                                    dynamic(li.class("nav-item"))
+                                    li.class("nav-item")
                                         .if(\.title == "Home page", add: .class("active")).child(
                                             a.href("/").class("nav-link").child(
                                                 "Home"
                                             )
                                     ),
-                                    dynamic(li.class("nav-item"))
+                                    li.class("nav-item")
                                         .if(\.title == "All Users", add: .class("active")).child(
                                             a.href("/users").class("nav-link").child(
                                                 "All Users"
                                             )
                                     ),
-                                    dynamic(li.class("nav-item"))
+                                    li.class("nav-item")
                                         .if(\.title == "All Categories", add: .class("active")).child(
                                             a.href("/categories").class("nav-link").child(
                                                 "All Categories"
                                             )
                                     ),
-                                    dynamic(li.class("nav-item"))
+                                    li.class("nav-item")
                                         .if(\.title == "Create An Acronym", add: .class("active")).child(
                                             a.href("/acronyms/create").class("nav-link").child(
                                                 "Create An Acronym"
@@ -91,7 +91,7 @@ struct BaseTemplate: ContextualTemplate {
                                     ),
                                     runtimeIf(
                                         \.userLoggedIn == false,
-                                        dynamic(li.class("nav-item"))
+                                        li.class("nav-item")
                                             .if(\.title == "Register", add: .class("active")).child(
                                                 a.href("/register").class("nav-link").child(
                                                     "Register"
@@ -101,7 +101,8 @@ struct BaseTemplate: ContextualTemplate {
                                 ),
                                 runtimeIf(
                                     \.userLoggedIn,
-                                    form.class("form-inline").action("/logout").method("post").child(
+
+                                    form.class("form-inline").action("/logout").method(.post).child(
                                         input.class("nav-link btn").type("submit").value("Log out")
                                     )
                                 )

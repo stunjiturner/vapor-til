@@ -105,9 +105,9 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
   config.prefer(MemoryKeyedCache.self, for: KeyedCache.self)
     _ = PageController.shared // Pre-rendering all views
 
-  guard let sendGridAPIKey = Environment.get("SENDGRID_API_KEY") else {
-    fatalError("No Send Grid API Key specified")
-  }
-  let sendGridConfig = SendGridConfig(apiKey: sendGridAPIKey)
-  services.register(sendGridConfig)
+//  guard let sendGridAPIKey = Environment.get("SENDGRID_API_KEY") else {
+//    fatalError("No Send Grid API Key specified")
+//  }
+//  let sendGridConfig = SendGridConfig(apiKey: sendGridAPIKey)
+//  services.register(sendGridConfig)
 }

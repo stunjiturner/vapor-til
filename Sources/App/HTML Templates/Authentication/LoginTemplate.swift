@@ -32,7 +32,7 @@ struct LoginTemplate: ContextualTemplate {
                 ),
 
                 // Form
-                form.method("post").child(
+                form.method(.post).child(
 
                     // User name input
                     div.class("form-group").child(

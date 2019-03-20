@@ -26,7 +26,7 @@ struct CreateAcronymTemplate: ContextualTemplate {
                     variable(\.base.title)
                 ),
 
-                form.method("post").child(
+                form.method(.post).child(
                     runtimeIf(
                         \.csrfToken != nil,
                         input.type("hidden").name("csrfToken").value(
