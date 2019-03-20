@@ -37,7 +37,8 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
   /// Register providers first
   try services.register(FluentPostgreSQLProvider())
   try services.register(AuthenticationProvider())
-  try services.register(SendGridProvider())
+    try services.register(HTMLKitProvider())
+//  try services.register(SendGridProvider())
 
   /// Register routes to the router
   let router = EngineRouter.default()
@@ -98,16 +99,34 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
   migrations.add(model: ResetPasswordToken.self, database: .psql)
   services.register(migrations)
 
+    var renderer = HTMLRenderer()
+
+    try renderer.add(template: AcronymTemplate())
+    try renderer.add(template: AcronymListTemplate())
+    try renderer.add(template: AddProfilePictureTemplate())
+    try renderer.add(template: AllCategoriesTemplate())
+    try renderer.add(template: AllUsersTemplate())
+    try renderer.add(template: CategoryTemplate())
+    try renderer.add(template: CreateAcronymTemplate())
+    try renderer.add(template: ForgottenPasswordTemplate())
+    try renderer.add(template: ForgottenPasswordConfirmedTemplate())
+    try renderer.add(template: IndexTemplate())
+    try renderer.add(template: LoginTemplate())
+    try renderer.add(template: RegisterTemplate())
+    try renderer.add(template: ResetPasswordTemplate())
+    try renderer.add(template: UserTemplate())
+
+    services.register(renderer)
+
   var commandConfig = CommandConfig.default()
   commandConfig.useFluentCommands()
   services.register(commandConfig)
 
   config.prefer(MemoryKeyedCache.self, for: KeyedCache.self)
-    _ = PageController.shared // Pre-rendering all views
 
-//  guard let sendGridAPIKey = Environment.get("SENDGRID_API_KEY") else {
-//    fatalError("No Send Grid API Key specified")
-//  }
-//  let sendGridConfig = SendGridConfig(apiKey: sendGridAPIKey)
-//  services.register(sendGridConfig)
+  guard let sendGridAPIKey = Environment.get("SENDGRID_API_KEY") else {
+    fatalError("No Send Grid API Key specified")
+  }
+  let sendGridConfig = SendGridConfig(apiKey: sendGridAPIKey)
+  services.register(sendGridConfig)
 }

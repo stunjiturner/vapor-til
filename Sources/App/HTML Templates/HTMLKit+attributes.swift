@@ -1,29 +1,6 @@
 import HTMLKit
 import Vapor
 
-class PageController {
-    static let shared = try! PageController()
-
-    private var renderer = HTMLRenderer()
-
-    init() throws {
-        try renderer.add(template: AcronymTemplate())
-        try renderer.add(template: AcronymListTemplate())
-        try renderer.add(template: AddProfilePictureTemplate())
-        try renderer.add(template: AllCategoriesTemplate())
-        try renderer.add(template: AllUsersTemplate())
-        try renderer.add(template: CategoryTemplate())
-        try renderer.add(template: CreateAcronymTemplate())
-        try renderer.add(template: ForgottenPasswordTemplate())
-        try renderer.add(template: ForgottenPasswordConfirmedTemplate())
-        try renderer.add(template: IndexTemplate())
-        try renderer.add(template: LoginTemplate())
-        try renderer.add(template: RegisterTemplate())
-        try renderer.add(template: ResetPasswordTemplate())
-        try renderer.add(template: UserTemplate())
-    }
-}
-
 // Some extensions for non standard HTML attributes
 extension AttributableNode {
     func integrity(_ value: CompiledTemplate...) -> Self {
