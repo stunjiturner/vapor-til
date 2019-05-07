@@ -44,7 +44,7 @@ struct BaseTemplate: ContextualTemplate {
                     meta.name("viewport").content("width=device-width, initial-scale=1, shrink-to-fit=no"),
                     link.rel("stylesheet").href("https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css").integrity("sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO").crossorigin("anonymous").type("text/css"),
 
-                    runtimeIf(
+                    renderIf(
                         \.title == "Create An Acronym" || \.title == "Edit Acronym",
 
                         link.rel("stylesheet").href("https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css").integrity("sha384-RdQbeSCGSeSdSlTMGnUr2oDJZzOuGjJAkQy1MbKMu8fZT5G0qlBajY0n0sY/hKMK").crossorigin("anonymous").type("text/css")
@@ -89,7 +89,7 @@ struct BaseTemplate: ContextualTemplate {
                                                 "Create An Acronym"
                                             )
                                     ),
-                                    runtimeIf(
+                                    renderIf(
                                         \.userLoggedIn == false,
                                         li.class("nav-item")
                                             .if(\.title == "Register", add: .class("active")).child(
@@ -99,7 +99,7 @@ struct BaseTemplate: ContextualTemplate {
                                         )
                                     )
                                 ),
-                                runtimeIf(
+                                renderIf(
                                     \.userLoggedIn,
 
                                     form.class("form-inline").action("/logout").method(.post).child(
@@ -112,7 +112,7 @@ struct BaseTemplate: ContextualTemplate {
                             content
                         ),
 
-                        runtimeIf(
+                        renderIf(
                             \.showCookieMessage,
                             div.id("cookieMessage").class("container").child(
                                 span.class("muted").child(
@@ -126,7 +126,7 @@ struct BaseTemplate: ContextualTemplate {
                         ),
                         script.src("https://code.jquery.com/jquery-3.3.1.min.js").integrity("sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT").crossorigin("anonymous").type("text/javascript"),
 
-                        runtimeIf(
+                        renderIf(
                             \.title == "Create An Acronym" || \.title == "Edit Acronym",
 
                             script.src("https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js").integrity("sha384-uQwKPrmNkEOvI7rrNdCSs6oS1F3GvnZkmPtkntOSIiPQN4CCbFSxv+Bj6qe0mWDb").crossorigin("anonymous").type("text/javascript"),

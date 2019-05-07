@@ -8,7 +8,7 @@ struct AcronymListTemplate: ContextualTemplate {
 
     func build() -> CompiledTemplate {
         return
-            runtimeIf(
+            renderIf(
                 \.count > 0,
 
                 table.class("table table-bordered table-hover").child(

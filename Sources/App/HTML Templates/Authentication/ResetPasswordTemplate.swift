@@ -24,7 +24,7 @@ struct ResetPasswordTemplate: ContextualTemplate {
                 ),
 
                 // Error message
-                runtimeIf(
+                renderIf(
                     \.isError,
                     div.class("alert alert-danger").role("alert").child(
                         "There was a problem with the form. Ensure you clicked on the full link with the token and your passwords match."
@@ -38,7 +38,10 @@ struct ResetPasswordTemplate: ContextualTemplate {
                         label.for("password").child(
                             "Password"
                         ),
-                        input.type("password").name("password").class("form-control").id("password")
+                        input.type("password")
+                            .name("password")
+                            .class("form-control")
+                            .id("password")
                     ),
 
                     // Confirm Password input
@@ -46,7 +49,10 @@ struct ResetPasswordTemplate: ContextualTemplate {
                         label.for("confirmPassword").child(
                             "Confirm Password"
                         ),
-                        input.type("password").name("confirmPassword").class("form-control").id("confirmPassword")
+                        input.type("password")
+                            .name("confirmPassword")
+                            .class("form-control")
+                            .id("confirmPassword")
                     ),
 
                     // Reset button

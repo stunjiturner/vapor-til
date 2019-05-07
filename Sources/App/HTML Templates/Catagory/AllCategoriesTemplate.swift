@@ -22,7 +22,7 @@ struct AllCategoriesTemplate: ContextualTemplate {
 
                 h1.child("All Categories"),
 
-                runtimeIf(
+                renderIf(
                     \.categories.count > 0,
 
                     table.class("table table-bordered table-hover").child(

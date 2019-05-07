@@ -27,7 +27,7 @@ struct CreateAcronymTemplate: ContextualTemplate {
                 ),
 
                 form.method(.post).child(
-                    runtimeIf(
+                    renderIf(
                         \.csrfToken != nil,
                         input.type("hidden").name("csrfToken").value(
                             variable(\.csrfToken)
@@ -66,7 +66,7 @@ struct CreateAcronymTemplate: ContextualTemplate {
                     // Submit button
                     button.type("submit").class("btn btn-primary").child(
 
-                        runtimeIf(
+                        renderIf(
                             \.isEditing,
                             "Update"
                         ).else(

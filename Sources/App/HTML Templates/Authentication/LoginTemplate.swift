@@ -24,7 +24,7 @@ struct LoginTemplate: ContextualTemplate {
                 ),
 
                 // Error Message
-                runtimeIf(
+                renderIf(
                     \.hasError,
                     div.class("alert alert-danger").role("alert").child(
                         "User authentication error. Either your username or password was invalid."

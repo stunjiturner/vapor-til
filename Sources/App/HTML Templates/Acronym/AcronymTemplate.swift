@@ -32,7 +32,7 @@ struct AcronymTemplate: ContextualTemplate {
                         variable(\.user.name)
                     )
                 ),
-                runtimeIf(
+                renderIf(
                     \.categories.count > 0,
 
                     h3.child("Categories"),

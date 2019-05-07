@@ -24,7 +24,7 @@ struct RegisterTemplate: ContextualTemplate {
                 ),
 
                 // Error message
-                runtimeIf(
+                renderIf(
                     \.message != nil,
                     div.class("alert alert-danger").role("alert").child(
                         "Please fix the following errors:",

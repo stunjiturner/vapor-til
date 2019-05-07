@@ -23,7 +23,7 @@ struct UserTemplate: ContextualTemplate {
                 content:
 
                 // Profile Picture
-                runtimeIf(
+                renderIf(
                     \.user.profilePicture != nil,
 
                     img.src("/users/", variable(\.user.id), "/profilePicture").alt( variable(\.user.name))
@@ -38,11 +38,11 @@ struct UserTemplate: ContextualTemplate {
                 ),
 
                 // Update or Add profile picture
-                runtimeIf(
+                renderIf(
                     \.base.userLoggedIn,
 
                     a.href("/users/", variable(\.user.id), "/addProfilePicture").child(
-                        runtimeIf(
+                        renderIf(
                             \.user.profilePicture != nil,
                             "Update "
                         ).else(

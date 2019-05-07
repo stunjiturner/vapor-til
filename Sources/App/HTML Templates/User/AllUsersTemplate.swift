@@ -21,7 +21,7 @@ struct AllUsersTemplate: ContextualTemplate {
 
                 h1.child("All Users"),
 
-                runtimeIf(
+                renderIf(
                     \.users.count > 0,
 
                     table.class("table table-bordered table-hover").child(
