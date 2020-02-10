@@ -1,27 +1,18 @@
-
 import Vapor
-import HTMLKit
-
-/// A struct adding the doctype html tag
-struct HTMLDocument: StaticView {
-
-    let document: CompiledTemplate
-
-    func build() -> CompiledTemplate {
-        return [
-            doctype("html"),
-            document
-        ]
-    }
-}
+import BootstrapKit
 
 
-struct BaseTemplate: ContextualTemplate {
+struct BaseTemplate: HTMLComponent {
 
+    /// The context needed to render a base template
     struct Context {
         let title: String
         let userLoggedIn: Bool
         let showCookieMessage: Bool
+
+        var modifyAcronym: Bool {
+            title == "Create An Acronym" || title == "Edit Acronym"
+        }
 
         init(title: String = "Acronyms", req: Request) throws {
             self.title = title
@@ -30,113 +21,109 @@ struct BaseTemplate: ContextualTemplate {
         }
     }
 
-    let content: CompiledTemplate
-
-    init(content: CompiledTemplate...) {
-        self.content = content
+    var navigationBarItems: [NavigationBarItem.Item] {
+        [
+            .init(title: "Home",            uri: "/",           isActive: context.title == "Home"),
+            .init(title: "All Users",       uri: "/users",      isActive: context.title == "All Users"),
+            .init(title: "All Categories",  uri: "/categories", isActive: context.title == "All Categories"),
+            .init(title: "Register",        uri: "/register",   isActive: context.title == "Register"),
+        ]
     }
 
-    func build() -> CompiledTemplate {
-        return HTMLDocument(document:
-            html.lang("en").child(
-                head.child(
-                    meta.charset("utf-8"),
-                    meta.name("viewport").content("width=device-width, initial-scale=1, shrink-to-fit=no"),
-                    link.rel("stylesheet").href("https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css").integrity("sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO").crossorigin("anonymous").type("text/css"),
+    private let context: TemplateValue<Context>
+    private let content: HTML
 
-                    renderIf(
-                        \.title == "Create An Acronym" || \.title == "Edit Acronym",
+    public init(context: TemplateValue<Context>, @HTMLBuilder content: () -> HTML) {
+        self.context = context
+        self.content = content()
+    }
 
-                        link.rel("stylesheet").href("https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css").integrity("sha384-RdQbeSCGSeSdSlTMGnUr2oDJZzOuGjJAkQy1MbKMu8fZT5G0qlBajY0n0sY/hKMK").crossorigin("anonymous").type("text/css")
-                    ),
+    var body: HTML {
+        Document(type: .html5) {
+            Head {
+                Viewport(.acordingToDevice)
+                Stylesheet(url: "/styles/style.css")
+                Stylesheet(url: "https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css")
+                IF(context.modifyAcronym) {
+                    Stylesheet(url: "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css")
+                }
+                Title {
+                    context.title
+                    " | Acronyms"
+                }
+            }
+            Body {
+                NavigationBar {
+                    NavigationBar.Brand(link: "/") {
+                        "TIL"
+                    }
+                    NavigationBar.Collapse {
+                        ForEach(in: navigationBarItems) { item in
+                            NavigationBarItem(item: item)
+                        }
+                        IF(context.userLoggedIn) {
+                            Form {
+                                Button {
+                                    "Log out"
+                                }
+                                .class("nav-link btn")
+                                .type(.submit)
+                            }
+                            .action("/logout")
+                            .method(.post)
+                        }
+                    }
+                }
 
-                    link.rel("stylesheet").href("/styles/style.css").type("text/css"),
-                    title.child(
-                        variable(\.title), " | Acronyms"
-                    ),
-                    body.child(
-                        nav.class("navbar navbar-expand-md navbar-dark bg-dark").child(
-                            a.class("navbar-brand").href("/").child(
-                                "TIL"
-                            ),
-                            button.class("navbar-toggler").type("button").dataToggle("collapse").dataTarget("#navbarSupportedContent").ariaControls("navbarSupportedContent").child(
-                                span.class("navbar-toggler-icon")
-                            ),
-                            div.class("collapse navbar-collapse").id("navbarSupportedContent").child(
-                                ul.class("navbar-nav mr-auto").child(
+                Container {
+                    content
+                }
+                .margin(.three, for: .top)
 
-                                    li.class("nav-item")
-                                        .if(\.title == "Home page", add: .class("active")).child(
-                                            a.href("/").class("nav-link").child(
-                                                "Home"
-                                            )
-                                    ),
-                                    li.class("nav-item")
-                                        .if(\.title == "All Users", add: .class("active")).child(
-                                            a.href("/users").class("nav-link").child(
-                                                "All Users"
-                                            )
-                                    ),
-                                    li.class("nav-item")
-                                        .if(\.title == "All Categories", add: .class("active")).child(
-                                            a.href("/categories").class("nav-link").child(
-                                                "All Categories"
-                                            )
-                                    ),
-                                    li.class("nav-item")
-                                        .if(\.title == "Create An Acronym", add: .class("active")).child(
-                                            a.href("/acronyms/create").class("nav-link").child(
-                                                "Create An Acronym"
-                                            )
-                                    ),
-                                    renderIf(
-                                        \.userLoggedIn == false,
-                                        li.class("nav-item")
-                                            .if(\.title == "Register", add: .class("active")).child(
-                                                a.href("/register").class("nav-link").child(
-                                                    "Register"
-                                                )
-                                        )
-                                    )
-                                ),
-                                renderIf(
-                                    \.userLoggedIn,
+                IF(context.showCookieMessage) {
+                    Container {
+                        Span {
+                            "This site uses cookies! To accept this, click "
+                            Anchor {
+                                "OK"
+                            }
+                            .href("#")
+                            .on(click: "cookiesConfirmed()")
+                        }
+                    }
+                    Script().source("/scripts/cookies.js").type("text/javascript")
+                }
 
-                                    form.class("form-inline").action("/logout").method(.post).child(
-                                        input.class("nav-link btn").type("submit").value("Log out")
-                                    )
-                                )
-                            )
-                        ),
-                        div.class("container mt-3").child(
-                            content
-                        ),
+                Script().source("https://code.jquery.com/jquery-3.3.1.min.js").type("text/javascript")
+                Script().source("https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js").type("text/javascript")
+                Script().source("https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js").type("text/javascript")
 
-                        renderIf(
-                            \.showCookieMessage,
-                            div.id("cookieMessage").class("container").child(
-                                span.class("muted").child(
-                                    "This site uses cookies! To accept this, click ",
-                                    a.href("#").onclick("cookiesConfirmed()").child(
-                                        "OK"
-                                    )
-                                )
-                            ),
-                            script.src("/scripts/cookies.js").type("text/javascript")
-                        ),
-                        script.src("https://code.jquery.com/jquery-3.3.1.min.js").integrity("sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT").crossorigin("anonymous").type("text/javascript"),
+                IF(context.modifyAcronym) {
+                    Script().source("https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js").type("text/javascript")
+                }
+            }
+        }
+    }
 
-                        renderIf(
-                            \.title == "Create An Acronym" || \.title == "Edit Acronym",
+    struct NavigationBarItem: HTMLComponent {
 
-                            script.src("https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js").integrity("sha384-uQwKPrmNkEOvI7rrNdCSs6oS1F3GvnZkmPtkntOSIiPQN4CCbFSxv+Bj6qe0mWDb").crossorigin("anonymous").type("text/javascript"),
-                            script.src("/scripts/createAcronym.js").type("text/javascript")
-                        ),
-                        script.src("https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js").integrity("sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49").crossorigin("anonymous").type("text/javascript"),
-                        script.src("https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js").integrity("sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy").crossorigin("anonymous").type("text/javascript")
-                    )
-                )
-            )
-        )
+        struct Item {
+            let title: String
+            let uri: String
+            let isActive: Conditionable
+        }
+
+        let item: TemplateValue<Item>
+
+        var body: HTML {
+            ListItem {
+                Anchor {
+                    item.title
+                }
+                .href(item.uri)
+                .class("nav-link")
+            }
+            .class("nav-item")
+        }
     }
 }

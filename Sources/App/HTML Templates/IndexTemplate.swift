@@ -1,8 +1,7 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct IndexTemplate: ContextualTemplate {
+struct IndexTemplate: HTMLTemplate {
 
     struct Context {
         let base: BaseTemplate.Context
@@ -14,22 +13,18 @@ struct IndexTemplate: ContextualTemplate {
         }
     }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
+    var body: HTML {
+        BaseTemplate(context: context.base) {
+            Img(source: "/images/logo.png")
+                .display(.block)
+                .margin(.auto, for: .horizontal)
+                .alt("TIL Logo")
+            Text {
+                "Acronyms"
+            }
+            .style(.heading1)
 
-                img.src("/images/logo.png").class("mx-auto d-block").alt("TIL Logo"),
-                h1.child(
-                    "Acronyms"
-                ),
-
-                // List of acronyms
-                embed(
-                    AcronymListTemplate(),
-                    withPath: \.acronyms
-                )
-            ),
-            withPath: \.base)
+            Acronym.Templates.List(context: context.acronyms)
+        }
     }
 }

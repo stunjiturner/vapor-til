@@ -1,63 +1,68 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-
-struct UserTemplate: ContextualTemplate {
-
-    struct Context {
-        let user: User
-        let base: BaseTemplate.Context
-        let acronyms: [Acronym]
-
-        init(user: User, acronyms: [Acronym], req: Request) throws {
-            self.user = user
-            self.base = try .init(title: user.name, req: req)
-            self.acronyms = acronyms
+extension User {
+    fileprivate var profilePictureUri: String? {
+        guard
+            let id = id,
+            profilePicture != nil
+        else {
+            return nil
         }
+        return "/users/\(id)/profilePicture"
     }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
+    fileprivate var addProfilePictureUri: String {
+        guard let id = id else {
+            return ""
+        }
+        return "/users/\(id)"
+    }
+}
 
-                // Profile Picture
-                renderIf(
-                    \.user.profilePicture != nil,
+extension User.Templates {
+    struct Details: HTMLTemplate {
 
-                    img.src("/users/", variable(\.user.id), "/profilePicture").alt( variable(\.user.name))
-                ),
+        struct Context {
+            let user: User
+            let base: BaseTemplate.Context
+            let acronyms: [Acronym]
 
-                h1.child(
-                    variable(\.user.name)
-                ),
+            init(user: User, acronyms: [Acronym], req: Request) throws {
+                self.user = user
+                self.base = try .init(title: user.name, req: req)
+                self.acronyms = acronyms
+            }
+        }
 
-                h2.child(
-                    variable(\.user.username)
-                ),
+        var body: HTML {
+            BaseTemplate(context: context.base) {
 
-                // Update or Add profile picture
-                renderIf(
-                    \.base.userLoggedIn,
+                Unwrap(context.user.profilePictureUri) { profilePictureUri in
+                    Img().source(profilePictureUri).alt(context.user.name)
+                }
 
-                    a.href("/users/", variable(\.user.id), "/addProfilePicture").child(
-                        renderIf(
-                            \.user.profilePicture != nil,
+                Text {
+                    context.user.name
+                }.style(.heading1)
+
+                Text {
+                    context.user.username
+                }.style(.heading2)
+
+                IF(context.base.userLoggedIn) {
+                    Anchor {
+                        IF(context.user.profilePicture != nil) {
                             "Update "
-                        ).else(
+                        }.else {
                             "Add "
-                        ),
+                        }
                         "Profile Picture"
-                    )
-                ),
+                    }.href(context.user.addProfilePictureUri)
+                }
 
-                // List of Acronyms
-                embed(
-                    AcronymListTemplate(),
-                    withPath: \.acronyms
-                )
-            ),
-            withPath: \.base)
+                Acronym.Templates.List(context: context.acronyms)
+            }
+        }
     }
 }

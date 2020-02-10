@@ -1,4 +1,4 @@
-// swift-tools-version:4.2
+// swift-tools-version:5.1
 
 /// Copyright (c) 2019 Razeware LLC
 ///
@@ -32,16 +32,20 @@ import PackageDescription
 
 let package = Package(
   name: "TILApp",
+  platforms: [
+    .macOS(.v10_14),
+  ],
   dependencies: [
     .package(url: "https://github.com/vapor/vapor.git", from: "3.0.0"),
     .package(url: "https://github.com/vapor/fluent-postgresql.git", from: "1.0.0"),
-    .package(url: "https://github.com/vapor-community/HTMLKit", from: "1.1.0"),
     .package(url: "https://github.com/vapor/auth.git", from: "2.0.0"),
     .package(url: "https://github.com/vapor-community/Imperial.git", from: "0.7.1"),
-    .package(url: "https://github.com/vapor-community/sendgrid-provider.git", from: "3.0.0")
+    .package(url: "https://github.com/vapor-community/sendgrid-provider.git", from: "3.0.0"),
+    .package(url: "https://github.com/MatsMoll/BootstrapKit.git", from: "1.0.0-beta.3"),
+    .package(url: "https://github.com/MatsMoll/htmlkit-vapor-3-provider.git", from: "1.0.0-beta.3")
   ],
   targets: [
-    .target(name: "App", dependencies: ["FluentPostgreSQL", "Vapor", "HTMLKit", "Authentication", "Imperial", "SendGrid"]),
+    .target(name: "App", dependencies: ["FluentPostgreSQL", "Vapor", "BootstrapKit", "HTMLKitVaporProvider", "Authentication", "Imperial", "SendGrid"]),
     .target(name: "Run", dependencies: ["App"]),
     .testTarget(name: "AppTests", dependencies: ["App"])
   ]

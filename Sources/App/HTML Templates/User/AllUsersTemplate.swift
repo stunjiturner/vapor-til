@@ -1,72 +1,72 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct AllUsersTemplate: ContextualTemplate {
-
-    struct Context {
-        let base: BaseTemplate.Context
-        let users: [User]
-
-        init(users: [User], req: Request) throws {
-            self.users = users
-            self.base = try .init(title: "All Users", req: req)
+extension User {
+    fileprivate var detailUri: String {
+        guard let id = id else {
+            return ""
         }
+        return "/users/\(id)"
     }
+}
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
+extension User.Templates {
 
-                h1.child("All Users"),
+    struct ListAll: HTMLTemplate {
 
-                renderIf(
-                    \.users.count > 0,
+        struct Context {
+            let base: BaseTemplate.Context
+            let users: [User]
 
-                    table.class("table table-bordered table-hover").child(
-                        thead.class("thead-light").child(
-                            tr.child(
-                                th.child("Username"),
-                                th.child("Name")
-                            )
-                        ),
+            init(users: [User], req: Request) throws {
+                self.users = users
+                self.base = try .init(title: "All Users", req: req)
+            }
+        }
 
-                        // All users
-                        tbody.child(
-                            forEach(in:     \.users,
-                                    render: UserRow()
-                            )
-                        )
-                    )
-                ).else(
-                    h2.child(
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    "All Users"
+                }
+                .style(.heading1)
+
+                IF(context.users.isEmpty) {
+                    Text {
                         "There aren't any users yet!"
-                    )
-                )
-            ),
-            withPath: \.base)
-    }
+                    }
+                }
+                .else {
+                    Row {
+                        ForEach(in: context.users) { user in
+                            Div {
+                                UserCard(user: user)
+                            }.column(width: .four, for: .large)
+                        }
+                    }
+                }
+            }
+        }
 
-    // MARK: - Sub views
+        struct UserCard: HTMLComponent {
 
-    struct UserRow: ContextualTemplate {
+            let user: TemplateValue<User>
 
-        typealias Context = User
+            var body: HTML {
+                Anchor {
+                    Card {
+                        Text {
+                            user.username
+                        }
+                        .style(.cardTitle)
+                        .text(color: .dark)
 
-        func build() -> CompiledTemplate {
-
-            return
-                tr.child(
-                    td.child(
-                        a.href("/users/", variable(\.id)).child(
-                            variable(\.username)
-                        )
-                    ),
-                    td.child(
-                        variable(\.name)
-                    )
-            )
+                        Text {
+                            user.name
+                        }.style(.cardText)
+                    }
+                }.href(user.detailUri)
+            }
         }
     }
 }

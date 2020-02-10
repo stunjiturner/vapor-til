@@ -1,76 +1,115 @@
 
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct AcronymTemplate: ContextualTemplate {
+extension User {
+    fileprivate var detailUri: String {
+        guard let id = id else {
+            return ""
+        }
+        return "/users/\(id)"
+    }
+}
 
-    struct Context {
-        let acronym: Acronym
-        let user: User
-        let categories: [Category]
-        let base: BaseTemplate.Context
+extension Category {
+    fileprivate var detailUri: String {
+        "/categories/\(id ?? 0)"
+    }
+}
 
-        init(req: Request, user: User, acronym: Acronym, categories: [Category]) throws {
-            self.acronym = acronym
-            self.user = user
-            self.categories = categories
-            self.base = try .init(title: acronym.short, req: req)
+extension Acronym {
+    fileprivate var deleteUri: String {
+        "/acronyms/\(id ?? 0)/delete"
+    }
+
+    fileprivate var editUri: String {
+        "/acronyms/\(id ?? 0)/edit"
+    }
+}
+
+extension Acronym.Templates {
+
+    struct Details: HTMLTemplate {
+
+        struct Context {
+            let acronym: Acronym
+            let user: User
+            let categories: [Category]
+            let base: BaseTemplate.Context
+
+            init(req: Request, user: User, acronym: Acronym, categories: [Category]) throws {
+                self.acronym = acronym
+                self.user = user
+                self.categories = categories
+                self.base = try .init(title: acronym.short, req: req)
+            }
+        }
+
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.acronym.short
+                }
+                .style(.heading1)
+
+                Text {
+                    context.acronym.long
+                }
+                .style(.heading2)
+
+                Text {
+                    "Created by "
+                    Anchor {
+                        context.user.name
+                    }
+                    .href(context.user.detailUri)
+                }
+
+                IF(context.categories.isEmpty == false) {
+                    Text {
+                        "Categories"
+                    }
+                    .style(.heading3)
+
+                    UnorderedList {
+                        ForEach(in: context.categories) { category in
+                            CatagoryView(category: category)
+                        }
+                    }
+                }
+
+                Form {
+                    Anchor {
+                        "Edit"
+                    }
+                    .button(style: .primary)
+                    .href(context.acronym.editUri)
+                    .role("button")
+
+                    Button {
+                        "Delete"
+                    }
+                    .button(style: .danger)
+                    .type(.submit)
+                    .margin(.one, for: .left)
+                }
+                .method(.post)
+                .action(context.acronym.deleteUri)
+            }
         }
     }
 
-    func build() -> CompiledTemplate {
+    struct CatagoryView: HTMLComponent {
 
-        return embed(
-            BaseTemplate(
-                content:
+        let category: TemplateValue<Category>
 
-                h1.child(variable(\.acronym.short)),
-                h2.child(variable(\.acronym.long)),
-                p.child(
-                    "Created by ",
-                    a.href("/users/", variable(\.user.id)).child(
-                        variable(\.user.name)
-                    )
-                ),
-                renderIf(
-                    \.categories.count > 0,
-
-                    h3.child("Categories"),
-
-                    // All catagories
-                    ul.child(
-                        forEach(in:     \.categories,
-                                render: CatagoryView()
-                        )
-                    )
-                ),
-
-                // Delete and edit Acronym
-                form.method(.post).action("/acronyms/", variable(\.acronym.id), "/delete").child(
-                    a.class("btn btn-primary").href("/acronyms/", variable(\.acronym.id) ,"/edit").role("button").child(
-                        "Edit"
-                    ),
-                    "  ",
-                    input.class("btn btn-danger").type("submit").value("Delete")
-                )
-            ),
-            withPath: \.base)
-    }
-
-
-    // MARK: - Sub views
-
-    struct CatagoryView: ContextualTemplate {
-
-        typealias Context = Category
-
-        func build() -> CompiledTemplate {
-            return
-                li.child(
-                    a.href(["/categories/", variable(\.id)]).child(
-                        variable(\.name)
-                    )
-            )
+        var body: HTML {
+            ListItem {
+                Anchor {
+                    category.name
+                }
+                .href(category.detailUri)
+            }
         }
     }
 }

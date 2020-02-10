@@ -1,75 +1,76 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct LoginTemplate: ContextualTemplate {
 
-    struct Context {
-        let base: BaseTemplate.Context
-        let hasError: Bool
+extension User.Templates {
+    struct Login: HTMLTemplate {
 
-        init(req: Request, hasError: Bool = false) throws {
-            self.base = try .init(title: "Log In", req: req)
-            self.hasError = hasError
+        struct Context {
+            let base: BaseTemplate.Context
+            let hasError: Bool
+
+            init(req: Request, hasError: Bool = false) throws {
+                self.base = try .init(title: "Log In", req: req)
+                self.hasError = hasError
+            }
         }
-    }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.base.title
+                }
+                .style(.heading1)
 
-                h1.child(
-                    variable(\.base.title)
-                ),
-
-                // Error Message
-                renderIf(
-                    \.hasError,
-                    div.class("alert alert-danger").role("alert").child(
+                IF(context.hasError) {
+                    Alert {
                         "User authentication error. Either your username or password was invalid."
-                    )
-                ),
+                    }
+                    .background(color: .danger)
+                }
 
-                // Form
-                form.method(.post).child(
+                Form {
+                    FormGroup(label: "Username") {
+                        Input()
+                            .type(.text)
+                            .id("username")
+                    }
 
-                    // User name input
-                    div.class("form-group").child(
-                        label.for("username").child(
-                            "Username"
-                        ),
-                        input.type("text").name("username").class("form-control").id("username")
-                    ),
+                    FormGroup(label: "Password") {
+                        Input()
+                            .type(.password)
+                            .id("password")
+                    }
 
-                    // Password input
-                    div.class("form-group").child(
-                        label.for("password").child(
-                            "Password"
-                        ),
-                        input.type("password").name("password").class("form-control").id("password")
-                    ),
+                    Button {
+                        "Log in"
+                    }
+                    .type(.submit)
+                    .button(style: .primary)
+                }
+                .method(.post)
 
-                    // Login button
-                    button.type("submit").class("btn btn-primary").child(
-                        "Log In"
-                    )
-                ),
+                Anchor {
+                    Img(source: "/images/sign-in-with-google.png")
+                        .alt("Sign In With Google")
+                        .margin(.three, for: .top)
+                }
+                .href("/login-google")
 
-                // Login alternatives
-                a.href("/login-google").child(
-                    img.class("mt-3").src("/images/sign-in-with-google.png").alt("Sign In With Google")
-                ),
-                a.href("/login-github").child(
-                    img.class("mt-3").src("/images/sign-in-with-github.png").alt("Sign In With GitHub")
-                ),
-                br,
+                Anchor {
+                    Img(source: "/images/sign-in-with-github.png")
+                        .alt("Sign In With GitHub")
+                        .margin(.three, for: .top)
+                }
+                .href("/login-github")
 
-                // Forgotten password
-                a.href("/forgottenPassword").child(
+                Break()
+
+                Anchor {
                     "Forgotten your password?"
-                )
-            ),
-            withPath: \.base)
+                }
+                .href("/forgottenPassword")
+            }
+        }
     }
 }

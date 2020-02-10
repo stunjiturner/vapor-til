@@ -1,84 +1,74 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct RegisterTemplate: ContextualTemplate {
+extension User.Templates {
+    struct Register: HTMLTemplate {
 
-    struct Context {
-        let base: BaseTemplate.Context
-        let message: String?
+        struct Context {
+            let base: BaseTemplate.Context
+            let message: String?
 
-        init(req: Request, message: String? = nil) throws {
-            self.base = try .init(title: "Register", req: req)
-            self.message = message
+            init(req: Request, message: String? = nil) throws {
+                self.base = try .init(title: "Register", req: req)
+                self.message = message
+            }
         }
-    }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.base.title
+                }
+                .style(.heading1)
 
-                h1.child(
-                    variable(\.base.title)
-                ),
+                Unwrap(context.message) { errorMessage in
 
-                // Error message
-                renderIf(
-                    \.message != nil,
-                    div.class("alert alert-danger").role("alert").child(
-                        "Please fix the following errors:",
-                        variable(\.message)
-                    )
-                ),
-                form.method(.post).child(
+                    Alert {
+                        "Please fix the following errors:"
+                        errorMessage
+                    }
+                    .background(color: .danger)
+                }
 
-                    // Name input
-                    div.class("form-group").child(
-                        label.for("name").child(
-                            "Name"
-                        ),
-                        input.type("text").name("name").class("form-control").id("name")
-                    ),
+                Form {
+                    FormGroup(label: "Name") {
+                        Input()
+                            .type(.text)
+                            .id("name")
+                    }
 
-                    // Username input
-                    div.class("form-group").child(
-                        label.for("username").child(
-                            "Username"
-                        ),
-                        input.type("text").name("username").class("form-control").id("username")
-                    ),
+                    FormGroup(label: "Username") {
+                        Input()
+                            .type(.text)
+                            .id("username")
+                    }
 
-                    // Email input
-                    div.class("form-group").child(
-                        label.for("emailAddress").child(
-                            "Email Address"
-                        ),
-                        input.type("email").name("emailAddress").class("form-control").id("emailAddress")
-                    ),
+                    FormGroup(label: "Email") {
+                        Input()
+                            .type(.email)
+                            .id("emailAddress")
+                    }
 
-                    // Password input
-                    div.class("form-group").child(
-                        label.for("password").child(
-                            "Password"
-                        ),
-                        input.type("password").name("password").class("form-control").id("password")
-                    ),
+                    FormGroup(label: "Password") {
+                        Input()
+                            .type(.password)
+                            .id("password")
+                    }
 
-                    // Confirm Password input
-                    div.class("form-group").child(
-                        label.for("confirmPassword").child(
-                            "Confirm Password"
-                        ),
-                        input.type("password").name("confirmPassword").class("form-control").id("confirmPassword")
-                    ),
+                    FormGroup(label: "Confirm Password") {
+                        Input()
+                            .type(.password)
+                            .id("confirmPassword")
+                    }
 
-                    // Register Button
-                    button.type("submit").class("btn btn-primary").child(
+                    Button {
                         "Register"
-                    )
-                )
-            ),
-            withPath: \Context.base)
+                    }
+                    .type(.submit)
+                    .button(style: .primary)
+                }
+                .method(.post)
+            }
+        }
     }
 }

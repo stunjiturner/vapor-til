@@ -1,55 +1,68 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct AcronymListTemplate: ContextualTemplate {
+extension Acronym {
+    enum Templates {}
+}
 
-    typealias Context = [Acronym]
-
-    func build() -> CompiledTemplate {
-        return
-            renderIf(
-                \.count > 0,
-
-                table.class("table table-bordered table-hover").child(
-                    thead.class("thead-light").child(
-                        tr.child(
-                            th.child("Short"),
-                            th.child("Long")
-                        )
-                    ),
-
-                    // All the rows
-                    tbody.child(
-                        forEach(
-                            render: AcronymRow()
-                        )
-                    )
-                )
-            ).else(
-                "There aren’t any acronyms yet!"
-            )
+extension Acronym {
+    fileprivate var detailsUri: String {
+        "/acronyms/\(id ?? 0)"
     }
+}
 
-    
-    // MARK: - Sub views
+extension Acronym.Templates {
+    struct List: HTMLTemplate {
 
-    struct AcronymRow: ContextualTemplate {
+        @TemplateValue([Acronym].self)
+        var context
 
-        typealias Context = Acronym
+        var body: HTML {
+            Container {
+                IF(context.isEmpty) {
+                    Text {
+                        "There aren’t any acronyms yet!"
+                    }
+                    .style(.heading1)
+                }
+                .else {
+                    Row {
+                        ForEach(in: context) { acronym in
+                            Div {
+                                AcronymCard(acronym: acronym)
+                            }.column(width: .four, for: .large)
+                        }
+                    }
+                }
+            }
+        }
 
-        func build() -> CompiledTemplate {
-            return
-                tr.child(
-                    td.child(
-                        a.href(["/acronyms/", variable(\.id)]).child(
-                            variable(\.short)
-                        )
-                    ),
-                    td.child(
-                        variable(\.long)
-                    )
-            )
+        struct AcronymCard: HTMLComponent {
+
+            let acronym: TemplateValue<Acronym>
+
+            var body: HTML {
+                Anchor {
+                    Card {
+                        Text {
+                            acronym.short
+                        }
+                        .style(.heading3)
+                        .text(color: .dark)
+
+                        Text {
+                            acronym.long
+                        }
+                        .style(.heading3)
+
+                        Button {
+                            "Se more"
+                        }
+                        .button(style: .primary)
+                    }
+                }
+                .href(acronym.detailsUri)
+            }
         }
     }
 }

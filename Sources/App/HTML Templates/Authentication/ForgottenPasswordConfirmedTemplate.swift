@@ -1,28 +1,32 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct ForgottenPasswordConfirmedTemplate: ContextualTemplate {
+extension User {
+    enum Templates {}
+}
 
-    struct Context {
-        let base: BaseTemplate.Context
+extension User.Templates {
+    struct ForgottenPasswordConfirmed: HTMLTemplate {
 
-        init(req: Request) throws {
-            self.base = try .init(title: "Password Reset Email Sent", req: req)
+        struct Context {
+            let base: BaseTemplate.Context
+
+            init(req: Request) throws {
+                self.base = try .init(title: "Password Reset Email Sent", req: req)
+            }
         }
-    }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
-                h1.child(
-                    variable(\.base.title)
-                ),
-                p.child(
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.base.title
+                }
+                .style(.heading1)
+
+                Text {
                     "Instructions to reset your password have been emailed to you."
-                )
-            ),
-            withPath: \.base)
+                }
+            }
+        }
     }
 }

@@ -1,68 +1,66 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
+extension Category {
+    enum Templates {}
 
-struct AllCategoriesTemplate: ContextualTemplate {
+    fileprivate var detailsUri: String {
+        "/categories/\(id ?? 0)"
+    }
+}
 
-    struct Context {
-        let categories: [Category]
-        let base: BaseTemplate.Context
+extension Category.Templates {
+    struct ListAll: HTMLTemplate {
 
-        init(categories: [Category], req: Request) throws {
-            self.categories = categories
-            self.base = try .init(title: "All Categories", req: req)
+        struct Context {
+            let categories: [Category]
+            let base: BaseTemplate.Context
+
+            init(categories: [Category], req: Request) throws {
+                self.categories = categories
+                self.base = try .init(title: "All Categories", req: req)
+            }
         }
-    }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.base.title
+                }
+                .style(.heading1)
 
-                h1.child("All Categories"),
-
-                renderIf(
-                    \.categories.count > 0,
-
-                    table.class("table table-bordered table-hover").child(
-                        thead.class("thead-light").child(
-                            tr.child(
-                                th.child("Name")
-                            )
-                        ),
-                        tbody.child(
-                            // All categories
-                            forEach(in:     \.categories,
-                                    render: CategoryRow()
-                            )
-                        )
-                    )
-                ).else(
-                    h2.child(
+                IF(context.categories.isEmpty) {
+                    Text {
                         "There aren't any categories yet!"
-                    )
-                )
-            ),
-        withPath: \Context.base)
-    }
+                    }
+                    .style(.heading2)
+                }
+                .else {
+                    Row {
+                        ForEach(in: context.categories) { category in
+                            Div {
+                                CategoryCard(category: category)
+                            }.column(width: .three, for: .large)
+                        }
+                    }
+                }
 
+            }
+        }
 
-    // MARK: - Sub views
+        struct CategoryCard: HTMLComponent {
 
-    struct CategoryRow: ContextualTemplate {
+            let category: TemplateValue<Category>
 
-        typealias Context = Category
-
-        func build() -> CompiledTemplate {
-            return
-                tr.child(
-                    td.child(
-                        a.href("/categories/", variable(\.id)).child(
-                            variable(\.name)
-                        )
-                    )
-            )
+            var body: HTML {
+                Anchor {
+                    Card {
+                        Text {
+                            category.name
+                        }
+                    }
+                }.href(category.detailsUri)
+            }
         }
     }
 }

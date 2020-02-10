@@ -74,8 +74,8 @@ struct WebsiteController: RouteCollection {
     return try req.parameters.next(Acronym.self).flatMap(to: HTTPResponse.self) { acronym in
       return acronym.user.get(on: req).flatMap(to: HTTPResponse.self) { user in
         return try acronym.categories.query(on: req).all().map(to: HTTPResponse.self) { (categories) in
-            let context = try AcronymTemplate.Context(req: req, user: user, acronym: acronym, categories: categories)
-            return try req.renderer().render(AcronymTemplate.self, with: context)
+            let context = try Acronym.Templates.Details.Context(req: req, user: user, acronym: acronym, categories: categories)
+            return try req.renderer().render(Acronym.Templates.Details.self, with: context)
         }
       }
     }
@@ -84,7 +84,7 @@ struct WebsiteController: RouteCollection {
   func userHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return try req.parameters.next(User.self).flatMap(to: HTTPResponse.self) { user in
       return try user.acronyms.query(on: req).all().map(to: HTTPResponse.self) { acronyms in
-        return try req.renderer().render(UserTemplate.self,
+        return try req.renderer().render(User.Templates.Details.self,
                                                 with: .init(user: user, acronyms: acronyms, req: req))
       }
     }
@@ -92,14 +92,14 @@ struct WebsiteController: RouteCollection {
 
   func allUsersHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return User.query(on: req).all().map(to: HTTPResponse.self) { users in
-        return try req.renderer().render(AllUsersTemplate.self,
+        return try req.renderer().render(User.Templates.ListAll.self,
                                                 with: .init(users: users, req: req))
     }
   }
 
   func allCategoriesHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return Category.query(on: req).all().map { categories in
-        return try req.renderer().render(AllCategoriesTemplate.self,
+        return try req.renderer().render(Category.Templates.ListAll.self,
                                                 with: .init(categories: categories, req: req))
     }
   }
@@ -107,7 +107,7 @@ struct WebsiteController: RouteCollection {
   func categoryHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return try req.parameters.next(Category.self).flatMap(to: HTTPResponse.self) { category in
         try category.acronyms.query(on: req).all().map { acronyms in
-            return try req.renderer().render(CategoryTemplate.self,
+            return try req.renderer().render(Category.Templates.Details.self,
                                                     with: .init(category: category, acronyms: acronyms, req: req))
         }
     }
@@ -116,7 +116,7 @@ struct WebsiteController: RouteCollection {
   func createAcronymHandler(_ req: Request) throws -> HTTPResponse {
     let token = try CryptoRandom().generateData(count: 16).base64EncodedString()
     try req.session()["CSRF_TOKEN"] = token
-    return try req.renderer().render(CreateAcronymTemplate.self, with: .init(req: req))
+    return try req.renderer().render(Acronym.Templates.Create.self, with: .init(req: req))
   }
 
   func createAcronymPostHandler(_ req: Request, data: CreateAcronymData) throws -> Future<Response> {
@@ -144,7 +144,7 @@ struct WebsiteController: RouteCollection {
   func editAcronymHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return try req.parameters.next(Acronym.self).flatMap(to: HTTPResponse.self) { acronym in
         try acronym.categories.query(on: req).all().map { categories in
-            return try req.renderer().render(CreateAcronymTemplate.self,
+            return try req.renderer().render(Acronym.Templates.Create.self,
                                                     with: .init(req: req, isEditing: true, categories: categories))
         }
     }
@@ -196,7 +196,7 @@ struct WebsiteController: RouteCollection {
   }
 
   func loginHandler(_ req: Request) throws -> HTTPResponse {
-    return try req.renderer().render(LoginTemplate.self,
+    return try req.renderer().render(User.Templates.Login.self,
                                             with: .init(req: req,
                                                         hasError: req.query[Bool.self, at: "error"] != nil))
   }
@@ -218,7 +218,7 @@ struct WebsiteController: RouteCollection {
   }
 
   func registerHandler(_ req: Request) throws -> HTTPResponse {
-    return try req.renderer().render(RegisterTemplate.self,
+    return try req.renderer().render(User.Templates.Register.self,
                                             with: .init(req: req,
                                                         message: req.query[String.self, at: "message"]))
   }
@@ -254,7 +254,7 @@ struct WebsiteController: RouteCollection {
     return User.query(on: req).filter(\.email == email).first().flatMap(to: HTTPResponse.self) { user in
       guard let user = user else {
         return req.future().map {
-            return try req.renderer().render(ForgottenPasswordTemplate.self, with: .init(req: req))
+            return try req.renderer().render(User.Templates.ForgottenPassword.self, with: .init(req: req))
         }
       }
 
@@ -271,7 +271,7 @@ struct WebsiteController: RouteCollection {
                                                                                                "value": emailContent]])
         let sendGridClient = try req.make(SendGridClient.self)
         return try sendGridClient.send([email], on: req.eventLoop).map(to: HTTPResponse.self) { _ in
-          return try req.renderer().render(ForgottenPasswordTemplate.self, with: .init(req: req))
+          return try req.renderer().render(User.Templates.ForgottenPassword.self, with: .init(req: req))
         }
       }
     }
@@ -280,7 +280,7 @@ struct WebsiteController: RouteCollection {
   func resetPasswordHandler(_ req: Request) throws -> Future<HTTPResponse> {
     guard let token = req.query[String.self, at: "token"] else {
         return req.future().map {
-            try req.renderer().render(ResetPasswordTemplate.self,
+            try req.renderer().render(User.Templates.ResetPassword.self,
                                              with: .init(req: req, isError: true))
         }
     }
@@ -295,14 +295,14 @@ struct WebsiteController: RouteCollection {
         return token.delete(on: req)
       }
     }.map {
-        try req.renderer().render(ResetPasswordTemplate.self,
+        try req.renderer().render(User.Templates.ResetPassword.self,
                                          with: .init(req: req))
     }
   }
 
   func resetPasswordPostHandler(_ req: Request, data: ResetPasswordData) throws -> Future<Response> {
     guard data.password == data.confirmPassword else {
-        return try req.renderer().render(ResetPasswordTemplate.self,
+        return try req.renderer().render(User.Templates.ResetPassword.self,
                                                 with: .init(req: req, isError: true)).encode(for: req)
     }
     let resetPasswordUser = try req.session().get("ResetPasswordUser", as: User.self)
@@ -314,7 +314,7 @@ struct WebsiteController: RouteCollection {
 
   func addProfilePictureHandler(_ req: Request) throws -> Future<HTTPResponse> {
     return try req.parameters.next(User.self).map { user in
-        try req.renderer().render(AddProfilePictureTemplate.self,
+        try req.renderer().render(User.Templates.AddProfilePicture.self,
                                          with: .init(username: user.name, req: req))
 
     }

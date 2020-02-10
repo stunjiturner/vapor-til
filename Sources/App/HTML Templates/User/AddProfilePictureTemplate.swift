@@ -1,41 +1,41 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct AddProfilePictureTemplate: ContextualTemplate {
+extension User.Templates {
+    struct AddProfilePicture: HTMLTemplate {
 
-    struct Context {
-        let base: BaseTemplate.Context
-        let username: String
+        struct Context {
+            let base: BaseTemplate.Context
+            let username: String
 
-        init(username: String, req: Request) throws {
-            self.username = username
-            self.base = try .init(title: "Add Profile Picture", req: req)
+            init(username: String, req: Request) throws {
+                self.username = username
+                self.base = try .init(title: "Add Profile Picture", req: req)
+            }
         }
-    }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.base.title
+                }
+                .style(.heading1)
 
-                h1.child(
-                    variable(\.base.title)
-                ),
+                Form {
+                    FormGroup(label: "Select Picture for " + context.username) {
+                        Input()
+                            .type(.file)
+                            .id("picture")
+                            .class("form-control-file")
+                    }
 
-                // The picture form
-                form.method(.post).enctype("multipart/form-data").child(
-                    div.class("form-group").child(
-                        label.for("picture").child(
-                            "Select Picture for ", variable(\.username)
-                        ),
-                        input.type("file").name("picture").class("form-control-file").id("picture")
-                    ),
-                    button.type("submit").class("btn btn-primary").child(
+                    Button {
                         "Upload"
-                    )
-                )
-            ),
-            withPath: \.base)
+                    }
+                    .type(.submit)
+                    .button(style: .primary)
+                }
+            }
+        }
     }
 }

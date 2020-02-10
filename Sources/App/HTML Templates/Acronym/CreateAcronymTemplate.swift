@@ -1,94 +1,61 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct CreateAcronymTemplate: ContextualTemplate {
+extension Acronym.Templates {
+    struct Create: HTMLTemplate {
 
-    struct Context {
-        let base: BaseTemplate.Context
-        let csrfToken: String?
-        let categories: [Category]
-        let isEditing: Bool
+        struct Context {
+            let base: BaseTemplate.Context
+            let csrfToken: String?
+            let categories: [Category]
+            let isEditing: Bool
 
-        init(req: Request, isEditing: Bool = false, categories: [Category] = []) throws {
-            self.base = try .init(title: isEditing ? "Edit Acronym" : "Create An Acronym", req: req)
-            self.csrfToken = try req.session()["CSRF_TOKEN"]
-            self.isEditing = isEditing
-            self.categories = categories
+            init(req: Request, isEditing: Bool = false, categories: [Category] = []) throws {
+                self.base = try .init(title: isEditing ? "Edit Acronym" : "Create An Acronym", req: req)
+                self.csrfToken = try req.session()["CSRF_TOKEN"]
+                self.isEditing = isEditing
+                self.categories = categories
+            }
         }
-    }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
-                h1.child(
-                    variable(\.base.title)
-                ),
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.base.title
+                }
+                .style(.heading1)
 
-                form.method(.post).child(
-                    renderIf(
-                        \.csrfToken != nil,
-                        input.type("hidden").name("csrfToken").value(
-                            variable(\.csrfToken)
-                        )
-                    ),
+                Form {
+                    Unwrap(context.csrfToken) { token in
+                        Input()
+                            .type(.hidden)
+                            .name("csrfToken")
+                            .value(token)
+                    }
 
-                    // Short acronym form
-                    div.class("form-group").child(
-                        label.for("short").child(
-                            "Acronym"
-                        ),
-                        input.type("text").name("short").class("form-control").id("short")
-                    ),
+                    FormGroup(label: "Acronym") {
+                        Input()
+                            .type(.text)
+                            .id("short")
+                    }
 
-                    // Long acronym form
-                    div.class("form-group").child(
-                        label.for("long").child(
-                            "Meaning"
-                        ),
-                        input.type("text").name("long").class("form-control").id("long")
-                    ),
+                    FormGroup(label: "Meaning") {
+                        Input()
+                            .type(.text)
+                            .id("long")
+                    }
 
-                    // The different catagories
-                    div.class("form-group").child(
-                        label.for("categories").child(
-                            "Categories"
-                        ),
-
-                        select.name("categories[]").class("form-control").id("categories").placeholder("Categories").multiple("multiple").child(
-                            forEach(in:     \.categories,
-                                    render: CategoryOption()
-                            )
-                        )
-                    ),
-
-                    // Submit button
-                    button.type("submit").class("btn btn-primary").child(
-
-                        renderIf(
-                            \.isEditing,
-                            "Update"
-                        ).else(
-                            "Submit"
-                        )
-                    )
-                )
-            ),
-            withPath: \.base)
-    }
-
-    // MARk: - Sub views
-
-    struct CategoryOption: ContextualTemplate {
-
-        typealias Context = Category
-
-        func build() -> CompiledTemplate {
-            return
-                option.value( variable(\.name)).selected.child(
-                    variable(\.name)
-            )
+                    FormGroup(label: "Categories") {
+                        Select(context.categories) { category in
+                            category.name
+                        }
+                        .isMultiple(true)
+                        .id("categories")
+                        .name("categories[]")
+                    }
+                }
+                .method(.post)
+            }
         }
     }
 }

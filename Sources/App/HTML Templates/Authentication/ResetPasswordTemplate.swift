@@ -1,66 +1,54 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct ResetPasswordTemplate: ContextualTemplate {
+extension User.Templates {
+    struct ResetPassword: HTMLTemplate {
 
-    struct Context {
-        let base: BaseTemplate.Context
-        let isError: Bool
+        struct Context {
+            let base: BaseTemplate.Context
+            let isError: Bool
 
-        init(req: Request, isError: Bool = false) throws {
-            self.base = try .init(title: "", req: req)
-            self.isError = isError
+            init(req: Request, isError: Bool = false) throws {
+                self.base = try .init(title: "", req: req)
+                self.isError = isError
+            }
         }
-    }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.base.title
+                }
+                .style(.heading1)
 
-                h1.child(
-                    variable(\.base.title)
-                ),
+                IF(context.isError) {
+                    Alert {
+                        "here was a problem with the form. Ensure you clicked on the full link with the token and your passwords match."
+                    }
+                    .background(color: .danger)
+                }
 
-                // Error message
-                renderIf(
-                    \.isError,
-                    div.class("alert alert-danger").role("alert").child(
-                        "There was a problem with the form. Ensure you clicked on the full link with the token and your passwords match."
-                    )
-                ),
-
-                form.method(.post).child(
-
-                    // Password input
-                    div.class("form-group").child(
-                        label.for("password").child(
-                            "Password"
-                        ),
-                        input.type("password")
-                            .name("password")
-                            .class("form-control")
+                Form {
+                    FormGroup(label: "Password") {
+                        Input()
+                            .type(.text)
                             .id("password")
-                    ),
+                    }
 
-                    // Confirm Password input
-                    div.class("form-group").child(
-                        label.for("confirmPassword").child(
-                            "Confirm Password"
-                        ),
-                        input.type("password")
-                            .name("confirmPassword")
-                            .class("form-control")
+                    FormGroup(label: "Confirm Password") {
+                        Input()
+                            .type(.password)
                             .id("confirmPassword")
-                    ),
+                    }
 
-                    // Reset button
-                    button.type("submit").class("btn btn-primary").child(
+                    Button {
                         "Reset"
-                    )
-                )
-            ),
-            withPath: \.base)
+                    }
+                    .type(.submit)
+                    .button(style: .primary)
+                }
+                .method(.post)
+            }
+        }
     }
 }

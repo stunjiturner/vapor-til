@@ -28,7 +28,7 @@
 
 import FluentPostgreSQL
 import Vapor
-import HTMLKit
+import HTMLKitVaporProvider
 import Authentication
 import SendGrid
 
@@ -37,7 +37,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
   /// Register providers first
   try services.register(FluentPostgreSQLProvider())
   try services.register(AuthenticationProvider())
-    try services.register(HTMLKitProvider())
 //  try services.register(SendGridProvider())
 
   /// Register routes to the router
@@ -99,22 +98,25 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
   migrations.add(model: ResetPasswordToken.self, database: .psql)
   services.register(migrations)
 
-    var renderer = HTMLRenderer()
+    let renderer = HTMLRenderer()
 
-    try renderer.add(template: AcronymTemplate())
-    try renderer.add(template: AcronymListTemplate())
-    try renderer.add(template: AddProfilePictureTemplate())
-    try renderer.add(template: AllCategoriesTemplate())
-    try renderer.add(template: AllUsersTemplate())
-    try renderer.add(template: CategoryTemplate())
-    try renderer.add(template: CreateAcronymTemplate())
-    try renderer.add(template: ForgottenPasswordTemplate())
-    try renderer.add(template: ForgottenPasswordConfirmedTemplate())
-    try renderer.add(template: IndexTemplate())
-    try renderer.add(template: LoginTemplate())
-    try renderer.add(template: RegisterTemplate())
-    try renderer.add(template: ResetPasswordTemplate())
-    try renderer.add(template: UserTemplate())
+    try renderer.add(view: IndexTemplate())
+
+    try renderer.add(view: Acronym.Templates.Details())
+    try renderer.add(view: Acronym.Templates.Create())
+    try renderer.add(view: Acronym.Templates.List())
+
+    try renderer.add(view: Category.Templates.Details())
+    try renderer.add(view: Category.Templates.ListAll())
+
+    try renderer.add(view: User.Templates.Details())
+    try renderer.add(view: User.Templates.ListAll())
+    try renderer.add(view: User.Templates.Login())
+    try renderer.add(view: User.Templates.Register())
+    try renderer.add(view: User.Templates.ResetPassword())
+    try renderer.add(view: User.Templates.ForgottenPassword())
+    try renderer.add(view: User.Templates.ForgottenPasswordConfirmed())
+    try renderer.add(view: User.Templates.AddProfilePicture())
 
     services.register(renderer)
 

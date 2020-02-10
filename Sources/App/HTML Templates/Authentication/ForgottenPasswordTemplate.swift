@@ -1,40 +1,40 @@
-
-import HTMLKit
+import BootstrapKit
 import Vapor
 
-struct ForgottenPasswordTemplate: ContextualTemplate {
 
-    struct Context {
-        let base: BaseTemplate.Context
+extension User.Templates {
+    struct ForgottenPassword: HTMLTemplate {
 
-        init(req: Request) throws {
-            self.base = try .init(title: "Reset Your Password", req: req)
+        struct Context {
+            let base: BaseTemplate.Context
+
+            init(req: Request) throws {
+                self.base = try .init(title: "Reset Your Password", req: req)
+            }
         }
-    }
 
-    func build() -> CompiledTemplate {
-        return embed(
-            BaseTemplate(
-                content:
-                h1.child(
-                    variable(\.base.title)
-                ),
-                form.method(.post).child(
+        var body: HTML {
+            BaseTemplate(context: context.base) {
+                Text {
+                    context.base.title
+                }
+                .style(.heading1)
 
-                    // Email input
-                    div.class("form-group").child(
-                        label.for("email").child(
-                            "Email"
-                        ),
-                        input.type("email").name("email").class("form-control").id("email")
-                    ),
+                Form {
+                    FormGroup(label: "Email") {
+                        Input()
+                            .type(.email)
+                            .id("email")
+                    }
 
-                    // Submit button
-                    button.type("submit").class("btn btn-primary").child(
+                    Button {
                         "Reset Password"
-                    )
-                )
-            ),
-            withPath: \.base)
+                    }
+                    .button(style: .primary)
+                    .type(.submit)
+                }
+                .method(.post)
+            }
+        }
     }
 }
