@@ -1,4 +1,4 @@
-// swift-tools-version:5.2.1
+// swift-tools-version:5.2.0
 
 /// Copyright (c) 2019 Razeware LLC
 ///
